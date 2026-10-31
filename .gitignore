@@ -1,0 +1,10 @@
+# runtime logs
+error.log
+icon-cli.log
+
+# personal uploaded images (kept local)
+images/
+
+# temp files
+*.tmp
+config.txt.tmp

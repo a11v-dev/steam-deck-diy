@@ -1,0 +1,1067 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Stream Deck Customizer</title>
+<style>
+  :root {
+    --bg: #070c16;
+    --bg2: #0b1220;
+    --panel: #111c2e;
+    --card: #1e293b;
+    --card2: #243247;
+    --line: #2b3a52;
+    --text: #e2e8f0;
+    --muted: #94a3b8;
+    --accent: #3b82f6;
+    --accent2: #2563eb;
+    --danger: #ef4444;
+    --ok: #22c55e;
+    --radius: 14px;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    background: radial-gradient(1200px 600px at 20% -10%, #14263f 0%, var(--bg) 55%) fixed, var(--bg);
+    color: var(--text);
+    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+    font-size: 14px;
+    -webkit-font-smoothing: antialiased;
+  }
+  button, input, select, textarea { font: inherit; color: inherit; }
+  button { cursor: pointer; }
+
+  /* ---------------- top bar ---------------- */
+  .topbar {
+    position: sticky; top: 0; z-index: 20;
+    display: flex; align-items: center; gap: 18px;
+    padding: 14px 22px;
+    background: rgba(9, 15, 26, .82);
+    backdrop-filter: blur(14px);
+    border-bottom: 1px solid rgba(59, 130, 246, .16);
+  }
+  .brand { display: flex; align-items: center; gap: 12px; min-width: 0; }
+  .logo {
+    width: 38px; height: 38px; border-radius: 11px;
+    display: grid; place-items: center;
+    background: linear-gradient(145deg, #3b82f6, #1d4ed8);
+    box-shadow: 0 6px 18px rgba(37, 99, 235, .45);
+    font-size: 20px; color: #fff;
+  }
+  .brand h1 { margin: 0; font-size: 16px; letter-spacing: .3px; font-weight: 650; }
+  .brand h1 em { font-style: normal; color: #93c5fd; font-weight: 500; }
+  .brand p { margin: 2px 0 0; font-size: 11.5px; color: var(--muted); }
+
+  .status {
+    display: flex; align-items: center; gap: 8px;
+    padding: 7px 12px; border-radius: 999px;
+    background: #131e30; border: 1px solid var(--line);
+    font-size: 12px; color: var(--muted); white-space: nowrap;
+  }
+  .status .dot { width: 8px; height: 8px; border-radius: 50%; background: #64748b; box-shadow: 0 0 0 3px rgba(100,116,139,.15); }
+  .status.on .dot { background: var(--ok); box-shadow: 0 0 0 3px rgba(34,197,94,.15); }
+  .status.on { color: #bbf7d0; border-color: rgba(34,197,94,.28); }
+
+  .top-actions { margin-left: auto; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
+  .switch { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); user-select: none; }
+  .switch input { accent-color: var(--accent); }
+
+  .btn {
+    border: 1px solid var(--line); background: var(--card);
+    color: var(--text); padding: 9px 14px; border-radius: 10px;
+    font-size: 13px; font-weight: 600; transition: .15s ease;
+    white-space: nowrap;
+  }
+  .btn:hover { background: var(--card2); border-color: #3b4d69; transform: translateY(-1px); }
+  .btn:active { transform: translateY(0); }
+  .btn.primary { background: linear-gradient(145deg, var(--accent), var(--accent2)); border-color: transparent; box-shadow: 0 6px 18px rgba(37,99,235,.32); }
+  .btn.primary:hover { filter: brightness(1.08); }
+  .btn.ghost { background: transparent; }
+  .btn.ghost:hover { background: var(--card); }
+  .btn.danger { color: #fca5a5; border-color: rgba(239,68,68,.35); }
+  .btn.danger:hover { background: rgba(239,68,68,.12); }
+  .btn.wide { width: 100%; }
+  .btn:disabled { opacity: .5; cursor: default; transform: none; }
+
+  /* ---------------- layout ---------------- */
+  main {
+    display: grid; grid-template-columns: 250px minmax(0, 1fr);
+    gap: 18px; padding: 18px 22px 28px;
+    max-width: 1400px; margin: 0 auto;
+  }
+  .panel {
+    background: linear-gradient(180deg, rgba(30,41,59,.55), rgba(17,28,46,.75));
+    border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 16px;
+  }
+  .settings { align-self: start; position: sticky; top: 82px; }
+  .settings h2 {
+    margin: 0 0 12px; font-size: 11px; letter-spacing: 1.4px;
+    text-transform: uppercase; color: #7dd3fc; font-weight: 700;
+  }
+  .settings label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 11px; }
+  .settings input[type="text"], .settings input[type="number"], .settings select {
+    width: 100%; margin-top: 5px; padding: 8px 10px;
+    background: #0d1728; border: 1px solid var(--line); border-radius: 9px;
+    outline: none; transition: border .15s;
+  }
+  .settings input:focus, .settings select:focus { border-color: var(--accent); }
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .check { display: flex !important; align-items: center; gap: 8px; margin: 4px 0 12px; }
+  .check input { width: auto !important; margin: 0 !important; accent-color: var(--accent); }
+  .hint { font-size: 11.5px; line-height: 1.5; color: #7f8ea6; margin: 2px 0 0; }
+  .hint b { color: #bfdbfe; font-weight: 600; }
+  hr { border: 0; border-top: 1px solid var(--line); margin: 15px 0; }
+  .tips { margin: 0; padding-left: 17px; font-size: 11.5px; line-height: 1.75; color: #8fa0b8; }
+  .tips b { color: #cbd5e1; }
+
+  /* ---------------- deck preview ---------------- */
+  .deck-area { min-width: 0; }
+  .deck-frame {
+    background: linear-gradient(180deg, #0f172a, #0a1120);
+    border: 1px solid #23324a; border-radius: 18px;
+    padding: 14px;
+    box-shadow: 0 24px 60px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.04);
+  }
+  .deck-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 2px 11px; font-size: 10.5px; letter-spacing: 1.3px;
+    color: #64748b; font-weight: 700;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(var(--cols, 4), minmax(0, 1fr));
+    gap: 9px;
+  }
+  .tile {
+    position: relative;
+    aspect-ratio: 3.2 / 1;
+    min-height: 54px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 1px; padding: 3px 4px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 11px;
+    cursor: pointer; user-select: none;
+    transition: background .13s, border-color .13s, transform .13s;
+    overflow: hidden;
+  }
+  .tile:hover { background: var(--card2); border-color: #3d5a80; transform: translateY(-1px); }
+  .tile:active { transform: translateY(0); }
+  .tile.empty { border-style: dashed; background: rgba(30,41,59,.35); }
+  .tile.empty .ico { opacity: .5; font-size: 18px; color: #64748b; }
+  .tile.active { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .tile.dragging { opacity: .35; }
+  .tile.dragover { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+  .tile .ico {
+    display: flex; align-items: center; justify-content: center;
+    width: 28px; height: 28px; flex: 0 0 28px;
+  }
+  .tile .ico img { width: 28px; height: 28px; object-fit: contain; display: none; }
+  .tile .ico .letter {
+    width: 24px; height: 24px; border-radius: 7px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 700; color: #dbeafe;
+    background: linear-gradient(145deg, #334155, #1e293b);
+    text-transform: uppercase;
+  }
+  .tile .cap {
+    max-width: 100%; font-size: 9px; line-height: 1.1; color: #94a3b8;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: center;
+  }
+  @media (max-width: 980px) {
+    .topbar { flex-wrap: wrap; padding: 11px 14px; gap: 10px 12px; }
+    .status { margin-left: auto; }
+    .top-actions { width: 100%; margin-left: 0; justify-content: flex-end; }
+  }
+  @media (max-width: 900px) {
+    main { grid-template-columns: 1fr; }
+    .settings { position: static; }
+    .deck-area { order: -1; }
+  }
+
+  /* ---------------- modal ---------------- */
+  .overlay {
+    position: fixed; inset: 0; z-index: 40;
+    background: rgba(3, 7, 14, .72);
+    backdrop-filter: blur(6px);
+    display: grid; place-items: center;
+    padding: 18px;
+    animation: fade .12s ease;
+  }
+  @keyframes fade { from { opacity: 0; } }
+  .overlay[hidden] { display: none !important; }
+  .modal {
+    width: min(780px, 100%);
+    max-height: calc(100vh - 36px);
+    display: flex; flex-direction: column;
+    background: linear-gradient(180deg, #121f33, #0d1728);
+    border: 1px solid #2d405c; border-radius: 18px;
+    box-shadow: 0 30px 90px rgba(0,0,0,.65);
+    overflow: hidden;
+  }
+  .modal-head {
+    display: flex; align-items: flex-start; justify-content: space-between;
+    padding: 18px 20px 14px; border-bottom: 1px solid var(--line);
+  }
+  .modal-head h2 { margin: 0; font-size: 16px; }
+  .modal-head p { margin: 3px 0 0; font-size: 12px; color: var(--muted); }
+  .iconbtn {
+    border: 0; background: transparent; color: var(--muted);
+    font-size: 16px; width: 32px; height: 32px; border-radius: 8px;
+  }
+  .iconbtn:hover { background: var(--card); color: var(--text); }
+
+  .modal-body { padding: 16px 20px; overflow-y: auto; }
+  .preview-box {
+    display: flex; align-items: center; gap: 14px;
+    padding: 13px 16px; border-radius: 12px;
+    border: 1px solid var(--line); margin-bottom: 16px;
+    background: var(--card);
+  }
+  .big-icon {
+    width: 64px; height: 64px; flex: 0 0 64px;
+    display: grid; place-items: center;
+    background: rgba(15,23,42,.7); border-radius: 14px;
+    border: 1px solid rgba(255,255,255,.06);
+  }
+  .big-icon img { width: 48px; height: 48px; object-fit: contain; display: none; }
+  .big-icon #edLetter {
+    font-size: 22px; font-weight: 800; color: #dbeafe; text-transform: uppercase;
+  }
+  .preview-meta { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+  .preview-meta b { font-size: 15px; }
+  .preview-meta span {
+    align-self: flex-start; font-size: 10.5px; letter-spacing: .6px;
+    text-transform: uppercase; color: #93c5fd;
+    background: rgba(59,130,246,.13); border: 1px solid rgba(59,130,246,.25);
+    padding: 2px 8px; border-radius: 999px;
+  }
+
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 13px; }
+  .form-grid label { display: flex; flex-direction: column; gap: 6px; font-size: 12px; color: var(--muted); }
+  .form-grid .span2 { grid-column: span 2; }
+  .muted { color: #64748b; font-weight: 400; }
+  .form-grid input, .form-grid select, .form-grid textarea {
+    background: #0b1524; border: 1px solid var(--line); border-radius: 9px;
+    padding: 9px 11px; outline: none; transition: border .15s;
+  }
+  .icon-row { display: flex; gap: 8px; }
+  .icon-row input[type="text"] { flex: 1; min-width: 0; }
+  .icon-row .btn { flex: 0 0 auto; padding: 8px 12px; }
+  .form-grid input:focus, .form-grid select:focus, .form-grid textarea:focus { border-color: var(--accent); }
+  .form-grid textarea { resize: vertical; min-height: 56px; font-family: Consolas, "Cascadia Mono", monospace; font-size: 12.5px; }
+  .color-row { display: flex; gap: 8px; }
+  .color-row input[type="color"] { width: 46px; height: 38px; padding: 2px; cursor: pointer; background: #0b1524; }
+  .color-row input[type="text"] { flex: 1; font-family: Consolas, monospace; text-transform: uppercase; }
+
+  .apps { margin-top: 18px; border-top: 1px solid var(--line); padding-top: 14px; }
+  .apps[hidden] { display: none; }
+  .apps-head { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+  .apps-head h3 { margin: 0; font-size: 12px; letter-spacing: .8px; text-transform: uppercase; color: #7dd3fc; white-space: nowrap; }
+  .apps-head input {
+    margin-left: auto; width: 230px; background: #0b1524;
+    border: 1px solid var(--line); border-radius: 9px; padding: 7px 10px; outline: none;
+  }
+  .apps-head input:focus { border-color: var(--accent); }
+  .app-list {
+    max-height: 172px; overflow-y: auto;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 6px;
+    padding-right: 4px;
+  }
+  .app-item {
+    text-align: left; background: #0d1829; border: 1px solid #24344c;
+    border-radius: 9px; padding: 7px 10px; display: flex; flex-direction: column; gap: 1px;
+    min-width: 0; transition: .12s;
+  }
+  .app-item:hover { background: var(--card); border-color: var(--accent); }
+  .app-item span { font-size: 12.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .app-item small { font-size: 10px; color: #64748b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  .modal-foot {
+    display: flex; align-items: center; gap: 10px;
+    padding: 14px 20px; border-top: 1px solid var(--line);
+    background: rgba(10, 17, 30, .55);
+  }
+  .spacer { flex: 1; }
+
+  /* ---------------- toast ---------------- */
+  .toast {
+    position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%);
+    background: #16281f; border: 1px solid rgba(34,197,94,.4);
+    color: #dcfce7; padding: 11px 18px; border-radius: 11px;
+    font-size: 13px; font-weight: 500; z-index: 60;
+    box-shadow: 0 14px 40px rgba(0,0,0,.5);
+    animation: rise .16s ease;
+  }
+  .toast.error { background: #2a1518; border-color: rgba(239,68,68,.45); color: #fecaca; }
+  .toast[hidden] { display: none !important; }
+  @keyframes rise { from { opacity: 0; transform: translate(-50%, 8px); } }
+
+  .dirty-dot {
+    width: 7px; height: 7px; border-radius: 50%; background: #fbbf24;
+    box-shadow: 0 0 0 3px rgba(251,191,36,.15);
+    display: none;
+  }
+  .dirty-dot.show { display: inline-block; }
+
+  @media (max-width: 720px) {
+    .topbar { flex-wrap: wrap; }
+    .top-actions { width: 100%; justify-content: flex-start; }
+    .form-grid { grid-template-columns: 1fr; }
+    .form-grid .span2 { grid-column: span 1; }
+    .app-list { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <div class="logo">▦</div>
+    <div>
+      <h1>Stream Deck <em>Customizer</em></h1>
+      <p id="deckInfo">4 × 8 · 32 buttons</p>
+    </div>
+  </div>
+
+  <div class="status" id="statusPill">
+    <span class="dot"></span><span id="statusText">Checking…</span>
+  </div>
+
+  <div class="top-actions">
+    <span class="dirty-dot" id="dirtyDot" title="Unsaved changes"></span>
+    <label class="switch"><input type="checkbox" id="restartAfterSave" checked> Restart after save</label>
+    <button class="btn ghost" id="btnDownload">Download</button>
+    <button class="btn ghost" id="btnRestart">Restart deck</button>
+    <button class="btn primary" id="btnSave">Save changes</button>
+  </div>
+</header>
+
+<main>
+  <aside class="panel settings">
+    <h2>Panel settings</h2>
+
+    <label>Screen
+      <select id="setMonitor">
+        <option value="1">1 · Primary</option>
+        <option value="2">2 · Secondary</option>
+        <option value="3">3 · Third</option>
+        <option value="4">4 · Fourth</option>
+      </select>
+    </label>
+
+    <label>Header title
+      <input type="text" id="setTitle" maxlength="60" placeholder="STREAM DECK">
+    </label>
+
+    <div class="row2">
+      <label>Columns
+        <input type="number" id="setColumns" min="1" max="12" value="4">
+      </label>
+      <label>Rows
+        <input type="number" id="setRows" min="1" max="12" value="8">
+      </label>
+    </div>
+
+    <label class="check"><input type="checkbox" id="setLabels"> Show text labels on deck</label>
+
+    <p class="hint">This deck is set up as <b>4 columns × 8 rows</b>. When labels are hidden, each name is still available as a tooltip.</p>
+
+    <hr>
+    <h2>How it works</h2>
+    <ul class="tips">
+      <li>Click a tile to edit it.</li>
+      <li>Drag tiles to swap positions.</li>
+      <li>Save writes <b>config.txt</b> next to the app.</li>
+      <li>Restart reloads the panel with the new icons.</li>
+    </ul>
+
+    <hr>
+    <button class="btn ghost wide" id="btnReload">Reload from config.txt</button>
+  </aside>
+
+  <section class="deck-area">
+    <div class="deck-frame">
+      <div class="deck-head">
+        <span>DECK PREVIEW</span>
+        <span id="gridInfo">4 × 8</span>
+      </div>
+      <div class="grid" id="grid"></div>
+    </div>
+  </section>
+</main>
+
+<!-- ---------------- editor modal ---------------- -->
+<div class="overlay" id="overlay" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="edTitle">
+    <div class="modal-head">
+      <div>
+        <h2 id="edTitle">Edit button</h2>
+        <p id="edSub">Slot 1</p>
+      </div>
+      <button class="iconbtn" id="edClose" aria-label="Close">✕</button>
+    </div>
+
+    <div class="modal-body">
+      <div class="preview-box" id="edPreviewBox">
+        <div class="big-icon">
+          <img id="edImg" alt="">
+          <span id="edLetter">B</span>
+        </div>
+        <div class="preview-meta">
+          <b id="edName">Button</b>
+          <span id="edBadge">app</span>
+        </div>
+      </div>
+
+      <div class="form-grid">
+        <label class="span2">Label <span class="muted">(tooltip only)</span>
+          <input type="text" id="edLabel" maxlength="40" placeholder="Brave">
+        </label>
+
+        <label>Action
+          <select id="edAction">
+            <option value="cmd">Open app / run command</option>
+            <option value="app">Run program directly</option>
+            <option value="url">Open website</option>
+            <option value="key">Media / key press</option>
+            <option value="text">Type text</option>
+            <option value="exit">Close deck</option>
+            <option value="none">Empty slot</option>
+          </select>
+        </label>
+
+        <label>Tile color <span class="muted">(background)</span>
+          <div class="color-row">
+            <input type="color" id="edColor" value="#1e293b">
+            <input type="text" id="edColorHex" maxlength="7" spellcheck="false" value="#1E293B">
+          </div>
+        </label>
+
+        <label class="span2">Command or value
+          <textarea id="edValue" rows="2" spellcheck="false"></textarea>
+        </label>
+        <p class="hint span2" id="edHelp"></p>
+
+        <label class="span2">Custom icon or image <span class="muted">(optional)</span>
+          <div class="icon-row">
+            <input type="text" id="edIcon" spellcheck="false" placeholder="Leave empty to auto-detect — or upload an image">
+            <button type="button" class="btn ghost" id="edUploadBtn">Upload image…</button>
+          </div>
+          <input type="file" id="edFile" accept="image/png,image/jpeg,image/bmp,image/gif" hidden>
+        </label>
+        <p class="hint span2">Tip: you can also drag an image file from your desktop straight onto any button.</p>
+      </div>
+
+      <div class="apps" id="edAppsWrap">
+        <div class="apps-head">
+          <h3>Installed apps</h3>
+          <input type="text" id="edAppSearch" placeholder="Search apps…" spellcheck="false">
+        </div>
+        <div class="app-list" id="edAppList"></div>
+      </div>
+    </div>
+
+    <div class="modal-foot">
+      <button class="btn ghost danger" id="edClear">Clear slot</button>
+      <div class="spacer"></div>
+      <button class="btn ghost" id="edCancel">Cancel</button>
+      <button class="btn primary" id="edApply">Apply</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast" hidden></div>
+
+<script>
+(() => {
+  'use strict';
+
+  const $ = id => document.getElementById(id);
+  const grid = $('grid');
+  const overlay = $('overlay');
+  const DEFAULT_COLOR = '#1E293B';
+
+  let state = null;
+  let savedSnapshot = '';
+  let editing = -1;
+  let apps = [];
+  let toastTimer = 0;
+  let previewTimer = 0;
+
+  /* ---------------- utilities ---------------- */
+
+  const emptyButton = () => ({ label: '', action: 'none', value: '', color: DEFAULT_COLOR, icon: '' });
+
+  const escapeHtml = s => String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+
+  const initial = s => {
+    const t = String(s || '').trim();
+    return t ? t[0] : '+';
+  };
+
+  const shortPath = p => {
+    const s = String(p || '');
+    if (s.length <= 58) return s;
+    return s.slice(0, 26) + '…' + s.slice(-28);
+  };
+
+  const hex6 = c => {
+    const s = String(c || '').trim();
+    if (/^#[0-9a-fA-F]{6}$/.test(s)) return s.toLowerCase();
+    if (/^[0-9a-fA-F]{6}$/.test(s)) return '#' + s.toLowerCase();
+    return '#1e293b';
+  };
+
+  function clamp(n, min, max, fallback) {
+    n = parseInt(n, 10);
+    if (!Number.isFinite(n)) return fallback;
+    return Math.min(max, Math.max(min, n));
+  }
+
+  function toast(message, isError) {
+    const el = $('toast');
+    el.textContent = message;
+    el.classList.toggle('error', !!isError);
+    el.hidden = false;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => { el.hidden = true; }, 2800);
+  }
+
+  async function api(url, options) {
+    const res = await fetch(url, options);
+    let data = null;
+    try { data = await res.json(); } catch { }
+    if (!res.ok) throw new Error((data && data.error) || ('HTTP ' + res.status));
+    return data;
+  }
+
+  function padButtons() {
+    const total = state.columns * state.rows;
+    while (state.buttons.length < total) state.buttons.push(emptyButton());
+    state.buttons.length = total;
+  }
+
+  function isDirty() {
+    return JSON.stringify(state) !== savedSnapshot;
+  }
+
+  function updateDirty() {
+    $('dirtyDot').classList.toggle('show', isDirty());
+  }
+
+  /* ---------------- image uploads ---------------- */
+
+  const IMAGE_TYPES = /^image\/(png|jpeg|bmp|gif)$/;
+
+  function fileToDataUrl(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = () => reject(new Error('Could not read the image'));
+      reader.readAsDataURL(file);
+    });
+  }
+
+  async function uploadImageFile(file) {
+    if (!file) throw new Error('No image selected');
+    if (!IMAGE_TYPES.test(file.type)) throw new Error('Use a PNG, JPG, BMP or GIF image');
+    if (file.size > 8 * 1024 * 1024) throw new Error('Image must be under 8 MB');
+    const data = await fileToDataUrl(file);
+    const result = await api('/api/upload', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: file.name, data })
+    });
+    return result.path;
+  }
+
+  /* ---------------- rendering ---------------- */
+
+  function renderGrid() {
+    padButtons();
+    grid.style.setProperty('--cols', state.columns);
+    grid.innerHTML = '';
+    state.buttons.forEach((b, i) => grid.appendChild(makeTile(b, i)));
+    $('gridInfo').textContent = state.columns + ' × ' + state.rows;
+    $('deckInfo').textContent = state.columns + ' × ' + state.rows + ' · ' + (state.columns * state.rows) + ' buttons';
+  }
+
+  function makeTile(b, i) {
+    const tile = document.createElement('div');
+    const isEmpty = b.action === 'none' && !b.icon;
+    tile.className = 'tile' + (isEmpty ? ' empty' : '');
+    tile.tabIndex = 0;
+    tile.draggable = true;
+    tile.dataset.index = i;
+    tile.title = (b.label ? b.label : 'Empty slot') + ' — click to edit';
+    tile.setAttribute('role', 'button');
+
+    const ico = document.createElement('div');
+    ico.className = 'ico';
+    if (isEmpty) {
+      ico.textContent = '+';
+    } else {
+      const img = document.createElement('img');
+      img.alt = '';
+      const letter = document.createElement('span');
+      letter.className = 'letter';
+      letter.textContent = b.action === 'exit' ? '✕' : initial(b.label);
+      img.addEventListener('load', () => {
+        img.style.display = 'block';
+        letter.style.display = 'none';
+      });
+      img.addEventListener('error', () => { img.remove(); });
+      if ((b.action !== 'exit' && b.action !== 'none') || b.icon) img.src = iconUrl(b);
+      ico.appendChild(img);
+      ico.appendChild(letter);
+    }
+
+    const cap = document.createElement('div');
+    cap.className = 'cap';
+    cap.textContent = b.label || 'Empty';
+
+    tile.appendChild(ico);
+    tile.appendChild(cap);
+
+    tile.addEventListener('click', () => openEditor(i));
+    tile.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openEditor(i); }
+    });
+
+    tile.addEventListener('dragstart', e => {
+      e.dataTransfer.setData('text/plain', String(i));
+      e.dataTransfer.effectAllowed = 'move';
+      tile.classList.add('dragging');
+    });
+    tile.addEventListener('dragend', () => tile.classList.remove('dragging'));
+    tile.addEventListener('dragover', e => { e.preventDefault(); tile.classList.add('dragover'); });
+    tile.addEventListener('dragleave', () => tile.classList.remove('dragover'));
+    tile.addEventListener('drop', async e => {
+      e.preventDefault();
+      tile.classList.remove('dragover');
+
+      const files = e.dataTransfer && e.dataTransfer.files;
+      if (files && files.length) {
+        try {
+          toast('Uploading image…');
+          state.buttons[i].icon = await uploadImageFile(files[0]);
+          renderGrid();
+          updateDirty();
+          toast('Image added — click Save changes');
+        } catch (err) {
+          toast('Upload failed: ' + err.message, true);
+        }
+        return;
+      }
+
+      const from = parseInt(e.dataTransfer.getData('text/plain'), 10);
+      if (!Number.isFinite(from) || from === i || !state.buttons[from]) return;
+      swapButtons(from, i);
+    });
+
+    return tile;
+  }
+
+  function iconUrl(b) {
+    const q = new URLSearchParams({
+      action: b.action || 'none',
+      value: b.value || '',
+      icon: b.icon || ''
+    });
+    return '/api/icon?' + q.toString();
+  }
+
+  function swapButtons(a, b) {
+    const tmp = state.buttons[a];
+    state.buttons[a] = state.buttons[b];
+    state.buttons[b] = tmp;
+    renderGrid();
+    updateDirty();
+  }
+
+  function applySettingsToForm() {
+    $('setMonitor').value = String(state.monitor);
+    $('setTitle').value = state.title || '';
+    $('setColumns').value = state.columns;
+    $('setRows').value = state.rows;
+    $('setLabels').checked = !!state.showlabels;
+  }
+
+  /* ---------------- data load / save ---------------- */
+
+  async function loadConfig() {
+    state = await api('/api/config');
+    padButtons();
+    savedSnapshot = JSON.stringify(state);
+    applySettingsToForm();
+    renderGrid();
+    updateDirty();
+  }
+
+  async function saveConfig() {
+    try {
+      $('btnSave').disabled = true;
+      const data = await api('/api/config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(state)
+      });
+      state = data;
+      savedSnapshot = JSON.stringify(state);
+      applySettingsToForm();
+      renderGrid();
+      updateDirty();
+      toast('Saved to config.txt');
+      if ($('restartAfterSave').checked) await restartDeck();
+    } catch (err) {
+      toast('Save failed: ' + err.message, true);
+    } finally {
+      $('btnSave').disabled = false;
+    }
+  }
+
+  async function restartDeck() {
+    try {
+      const data = await api('/api/restart', { method: 'POST' });
+      toast(data.ok ? 'Deck restarted' : 'Could not start the deck', !data.ok);
+      setTimeout(checkStatus, 1200);
+    } catch (err) {
+      toast('Restart failed: ' + err.message, true);
+    }
+  }
+
+  async function checkStatus() {
+    try {
+      const data = await api('/api/status');
+      $('statusPill').classList.toggle('on', !!data.running);
+      $('statusText').textContent = data.running ? 'Deck running' : 'Deck stopped';
+    } catch {
+      $('statusPill').classList.remove('on');
+      $('statusText').textContent = 'Server offline';
+    }
+  }
+
+  async function loadApps() {
+    try {
+      const data = await api('/api/apps');
+      apps = data.apps || [];
+      if (editing >= 0) renderAppList();
+    } catch { apps = []; }
+  }
+
+  /* ---------------- settings events ---------------- */
+
+  $('setMonitor').addEventListener('change', e => {
+    state.monitor = clamp(e.target.value, 1, 9, 2);
+    updateDirty();
+  });
+
+  $('setTitle').addEventListener('input', e => {
+    state.title = e.target.value;
+    updateDirty();
+  });
+
+  $('setColumns').addEventListener('change', e => {
+    state.columns = clamp(e.target.value, 1, 12, 4);
+    e.target.value = state.columns;
+    padButtons();
+    renderGrid();
+    updateDirty();
+  });
+
+  $('setRows').addEventListener('change', e => {
+    state.rows = clamp(e.target.value, 1, 12, 8);
+    e.target.value = state.rows;
+    padButtons();
+    renderGrid();
+    updateDirty();
+  });
+
+  $('setLabels').addEventListener('change', e => {
+    state.showlabels = e.target.checked;
+    updateDirty();
+  });
+
+  $('btnSave').addEventListener('click', saveConfig);
+  $('btnRestart').addEventListener('click', restartDeck);
+
+  $('btnDownload').addEventListener('click', () => {
+    window.location.href = '/api/config/raw';
+  });
+
+  $('btnReload').addEventListener('click', async () => {
+    if (isDirty() && !confirm('Discard unsaved changes and reload config.txt?')) return;
+    try { await loadConfig(); toast('Reloaded config.txt'); }
+    catch (err) { toast('Reload failed: ' + err.message, true); }
+  });
+
+  /* ---------------- editor ---------------- */
+
+  const ACTION_HELP = {
+    cmd: 'Runs through cmd. Example: start "" "C:\\Path\\App.lnk" — icons are detected automatically from .lnk or .exe files.',
+    app: 'Runs a program directly. Example: explorer.exe or C:\\Path\\App.exe',
+    url: 'Opens in your default browser. Example: https://youtube.com',
+    key: 'volumeup, volumedown, mute, playpause, next, prev, stop — or any SendKeys string such as ^c (Ctrl+C).',
+    text: 'Types the text into the focused window (SendKeys syntax).',
+    exit: 'Closes the deck panel. No value needed.',
+    none: 'Empty slot: shows a blank tile and does nothing.'
+  };
+
+  const ACTION_PLACEHOLDER = {
+    cmd: 'start "" "C:\\Users\\athav\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs\\Brave.lnk"',
+    app: 'explorer.exe',
+    url: 'https://youtube.com',
+    key: 'volumeup',
+    text: 'Hello from Stream Deck',
+    exit: '',
+    none: ''
+  };
+
+  const ACTION_BADGE = {
+    cmd: 'command',
+    app: 'program',
+    url: 'website',
+    key: 'key press',
+    text: 'text',
+    exit: 'close deck',
+    none: 'empty'
+  };
+
+  function openEditor(index) {
+    editing = index;
+    const b = state.buttons[index];
+    if (!b) return;
+
+    $('edTitle').textContent = 'Edit button ' + (index + 1);
+    $('edSub').textContent = 'Row ' + (Math.floor(index / state.columns) + 1) +
+      ' · Column ' + (index % state.columns + 1) + ' · ' + (state.columns * state.rows) + ' slots';
+
+    $('edLabel').value = b.label || '';
+    $('edAction').value = b.action || 'none';
+    $('edValue').value = b.value || '';
+    $('edIcon').value = b.icon || '';
+    $('edColor').value = hex6(b.color);
+    $('edColorHex').value = hex6(b.color).toUpperCase();
+    $('edAppSearch').value = '';
+
+    updateActionUI();
+    renderAppList();
+    refreshPreview();
+
+    overlay.hidden = false;
+    document.body.style.overflow = 'hidden';
+    setTimeout(() => $('edLabel').focus(), 60);
+  }
+
+  function closeEditor() {
+    overlay.hidden = true;
+    document.body.style.overflow = '';
+    editing = -1;
+  }
+
+  function updateActionUI() {
+    const action = $('edAction').value;
+    const disabled = action === 'none' || action === 'exit';
+
+    $('edValue').disabled = disabled;
+    $('edValue').placeholder = ACTION_PLACEHOLDER[action] || '';
+    $('edHelp').textContent = ACTION_HELP[action] || '';
+    $('edBadge').textContent = ACTION_BADGE[action] || action;
+
+    if (action === 'exit' || action === 'none') $('edValue').value = '';
+    $('edAppsWrap').hidden = !(action === 'cmd' || action === 'app');
+
+    updatePreviewText();
+    schedulePreview();
+  }
+
+  function updatePreviewText() {
+    const label = $('edLabel').value.trim();
+    $('edName').textContent = label || 'Untitled button';
+    $('edLetter').textContent = initial(label);
+    $('edPreviewBox').style.background = hex6($('edColorHex').value);
+  }
+
+  function refreshPreview() {
+    const action = $('edAction').value;
+    const value = $('edValue').value;
+    const icon = $('edIcon').value;
+    const img = $('edImg');
+    const letter = $('edLetter');
+
+    updatePreviewText();
+
+    if (action === 'none' && !icon) {
+      img.style.display = 'none';
+      letter.style.display = 'grid';
+      return;
+    }
+
+    const q = new URLSearchParams({ action, value, icon, v: String(Date.now()) });
+    const probe = new Image();
+    probe.onload = () => {
+      img.src = probe.src;
+      img.style.display = 'block';
+      letter.style.display = 'none';
+    };
+    probe.onerror = () => {
+      img.style.display = 'none';
+      letter.style.display = 'grid';
+      letter.textContent = initial($('edLabel').value);
+    };
+    probe.src = '/api/icon?' + q.toString();
+  }
+
+  function schedulePreview() {
+    clearTimeout(previewTimer);
+    previewTimer = setTimeout(refreshPreview, 350);
+  }
+
+  function renderAppList() {
+    const q = $('edAppSearch').value.trim().toLowerCase();
+    const list = apps.filter(a => !q || a.name.toLowerCase().includes(q)).slice(0, 400);
+    if (!list.length) {
+      $('edAppList').innerHTML = '<p class="hint">No matching apps found.</p>';
+      return;
+    }
+    $('edAppList').innerHTML = list.map(a =>
+      '<button type="button" class="app-item" data-path="' + escapeHtml(a.path) + '" title="' + escapeHtml(a.path) + '">' +
+        '<span>' + escapeHtml(a.name) + '</span>' +
+        '<small>' + escapeHtml(shortPath(a.path)) + '</small>' +
+      '</button>'
+    ).join('');
+  }
+
+  $('edAppList').addEventListener('click', e => {
+    const btn = e.target.closest('.app-item');
+    if (!btn) return;
+    const path = btn.getAttribute('data-path');
+    const name = btn.querySelector('span').textContent;
+    $('edAction').value = 'cmd';
+    $('edValue').value = 'start "" "' + path + '"';
+    if (!$('edLabel').value.trim()) $('edLabel').value = name;
+    updateActionUI();
+    refreshPreview();
+  });
+
+  $('edAppSearch').addEventListener('input', renderAppList);
+
+  $('edAction').addEventListener('change', updateActionUI);
+  $('edLabel').addEventListener('input', () => { updatePreviewText(); schedulePreview(); });
+  $('edValue').addEventListener('input', schedulePreview);
+  $('edIcon').addEventListener('input', schedulePreview);
+
+  $('edUploadBtn').addEventListener('click', e => {
+    e.preventDefault();
+    $('edFile').click();
+  });
+
+  $('edFile').addEventListener('change', async e => {
+    const file = e.target.files && e.target.files[0];
+    e.target.value = '';
+    if (!file) return;
+
+    const btn = $('edUploadBtn');
+    try {
+      btn.disabled = true;
+      btn.textContent = 'Uploading…';
+      toast('Uploading image…');
+      $('edIcon').value = await uploadImageFile(file);
+      refreshPreview();
+      toast('Image ready — click Apply');
+    } catch (err) {
+      toast('Upload failed: ' + err.message, true);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Upload image…';
+    }
+  });
+
+  // Dropping a file anywhere else should never navigate away from the page.
+  const isFileDrag = e => !!(e.dataTransfer && Array.from(e.dataTransfer.types || []).includes('Files'));
+  window.addEventListener('dragover', e => { if (isFileDrag(e)) e.preventDefault(); });
+  window.addEventListener('drop', e => { if (isFileDrag(e)) e.preventDefault(); });
+
+  $('edColor').addEventListener('input', e => {
+    $('edColorHex').value = e.target.value.toUpperCase();
+    updatePreviewText();
+  });
+
+  $('edColorHex').addEventListener('input', e => {
+    const v = e.target.value.trim();
+    if (/^#[0-9a-fA-F]{6}$/.test(v)) {
+      $('edColor').value = v.toLowerCase();
+      updatePreviewText();
+    }
+  });
+
+  function applyEditor() {
+    if (editing < 0) return;
+    const b = state.buttons[editing];
+    const action = $('edAction').value;
+
+    b.label = $('edLabel').value.trim();
+    b.action = action;
+    b.value = (action === 'none' || action === 'exit') ? '' : $('edValue').value.trim();
+    b.icon = $('edIcon').value.trim();
+    b.color = hex6($('edColorHex').value).toUpperCase();
+
+    if (action === 'none') {
+      b.value = '';
+    }
+
+    closeEditor();
+    renderGrid();
+    updateDirty();
+    toast('Button updated — click Save changes');
+  }
+
+  $('edApply').addEventListener('click', applyEditor);
+  $('edCancel').addEventListener('click', closeEditor);
+  $('edClose').addEventListener('click', closeEditor);
+
+  $('edClear').addEventListener('click', () => {
+    if (editing < 0) return;
+    state.buttons[editing] = emptyButton();
+    closeEditor();
+    renderGrid();
+    updateDirty();
+    toast('Slot cleared — click Save changes');
+  });
+
+  overlay.addEventListener('click', e => { if (e.target === overlay) closeEditor(); });
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && !overlay.hidden) { e.preventDefault(); closeEditor(); }
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+      e.preventDefault();
+      if (overlay.hidden) saveConfig();
+    }
+  });
+
+  window.addEventListener('beforeunload', e => {
+    if (isDirty()) { e.preventDefault(); e.returnValue = ''; }
+  });
+
+  /* ---------------- boot ---------------- */
+
+  (async function boot() {
+    try {
+      await loadConfig();
+      checkStatus();
+      setInterval(checkStatus, 4000);
+      loadApps();
+    } catch (err) {
+      toast('Cannot reach the customizer server: ' + err.message, true);
+    }
+  })();
+})();
+</script>
+</body>
+</html>
