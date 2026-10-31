@@ -32,4 +32,4 @@ VLC|cmd|start "" "C:\ProgramData\Microsoft\Windows\Start Menu\Programs\VideoLAN\
 Kdenlive|cmd|start "" "C:\ProgramData\Microsoft\Windows\Start Menu\Programs\kdenlive\Kdenlive.lnk"|#1E293B|
 |key|Previous|#78CD60|C:\Users\athav\OneDrive\Documents\opean code\summa\StreamDeck\images\giphy-2-mvvyd7na-cf418c.gif
 |key|next|#B0EEB1|C:\Users\athav\OneDrive\Documents\opean code\summa\StreamDeck\images\giphy-1-mvvya4rs-4c5b1c.gif
-|exit||#1E293B|C:\Users\athav\OneDrive\Documents\opean code\summa\StreamDeck\images\Screenshot-2026-06-30-205841-mvvz4rr4-70069f.png
+|exit||#1E293B|
